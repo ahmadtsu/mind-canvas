@@ -1,0 +1,5 @@
+{
+  "name": "ADHD Corkboard",
+  "description": "A neobrutalist-styled digital corkboard to help individuals with ADHD visualize and connect their thoughts and tasks. Users can add, edit, drag, and connect notes on a persistent canvas, with customization options for a personalized experience.",
+  "requestFramePermissions": []
+}
