@@ -408,6 +408,12 @@ const App: React.FC = () => {
   const boardClasses = isCorkboard ? '' : customization.boardColor;
   const boardStyle: React.CSSProperties = isCorkboard ? { backgroundImage: CORKBOARD_TEXTURE_SVG } : {};
 
+  const clearBoard = useCallback(() => {
+    setNotes([]);
+    setConnections([]);
+    setCustomization(DEFAULT_CUSTOMIZATION);
+  }, []);
+
 
   return (
     <main
@@ -514,6 +520,7 @@ const App: React.FC = () => {
         setOptions={setCustomization}
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
+        onClearBoard={clearBoard}
         panelColor={customization.noteColor}
       />
       {connectingNoteId && (

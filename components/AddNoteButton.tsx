@@ -44,6 +44,7 @@ export const AddNoteButton: React.FC<AddNoteButtonProps> = ({ onAddNote, current
         <button
           onClick={onAddNote}
           className={`flex items-center space-x-2 p-3 font-bold border-2 border-black rounded-none transition-colors text-black hover:brightness-110 ${noteColorClass}`}
+          aria-label="Add a new note"
         >
           <Icon icon="plus" className="w-6 h-6" />
           <span>Add Note</span>

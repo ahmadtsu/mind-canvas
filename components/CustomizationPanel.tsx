@@ -8,6 +8,7 @@ interface CustomizationPanelProps {
   setOptions: React.Dispatch<React.SetStateAction<CustomizationOptions>>;
   isOpen: boolean;
   onClose: () => void;
+  onClearBoard: () => void;
   panelColor: string;
 }
 
@@ -25,15 +26,10 @@ const ColorSwatch: React.FC<{
 );
 
 
-export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ options, setOptions, isOpen, onClose, panelColor }) => {
+export const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ options, setOptions, isOpen, onClose, onClearBoard, panelColor }) => {
   const handleClear = () => {
     if (window.confirm("Are you sure you want to clear the entire board? This action cannot be undone.")) {
-      // Directly remove all saved data from local storage.
-      localStorage.removeItem('corkboard-notes');
-      localStorage.removeItem('corkboard-connections');
-      localStorage.removeItem('corkboard-customization');
-      // Force a page reload to ensure the application starts fresh.
-      window.location.reload();
+      onClearBoard();
     }
   };
 

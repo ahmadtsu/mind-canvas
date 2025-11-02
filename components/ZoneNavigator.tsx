@@ -41,6 +41,7 @@ export const ZoneNavigator: React.FC<ZoneNavigatorProps> = ({
       <button
         onClick={onTogglePanel}
         className={`flex items-center justify-center p-4 border-y-2 border-r-2 border-l-2 border-black hover:brightness-110 transition-colors text-black ${panelButtonColor}`}
+        aria-label="Toggle customization panel"
       >
         <Icon icon={isPanelOpen ? 'x' : 'palette'} className="w-6 h-6" />
       </button>
