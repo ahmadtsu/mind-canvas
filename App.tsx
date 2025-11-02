@@ -37,7 +37,6 @@ const App: React.FC = () => {
   const [connectingNoteId, setConnectingNoteId] = useState<string | null>(null);
   const [tempLineEnd, setTempLineEnd] = useState<Position | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
-  const [draggedNote, setDraggedNote] = useState<{ id: string, position: Position } | null>(null);
 
   const [scale, setScale] = useState(0.8);
   const [viewOffset, setViewOffset] = useState<Position>({ x: 0, y: 0 });
@@ -189,17 +188,6 @@ const App: React.FC = () => {
       prev.map((note) => (note.id === id ? { ...note, position } : note))
     );
   }, []);
-
-  const updateDraggedNotePosition = useCallback((id: string, position: Position) => {
-    setDraggedNote({ id, position });
-  }, []);
-
-  const handleNoteDragEnd = useCallback(() => {
-    if (draggedNote) {
-      updateNotePosition(draggedNote.id, draggedNote.position);
-    }
-    setDraggedNote(null);
-  }, [draggedNote, updateNotePosition]);
 
   const updateNoteContent = useCallback((id: string, content: string) => {
     setNotes((prev) =>
@@ -484,9 +472,6 @@ const App: React.FC = () => {
           <Note
             key={note.id}
             note={note}
-            draggedNote={draggedNote}
-            onUpdateDraggedPosition={updateDraggedNotePosition}
-            onDragEnd={handleNoteDragEnd}
             onUpdatePosition={updateNotePosition}
             onUpdateContent={updateNoteContent}
             onUpdateColor={updateNoteColor}

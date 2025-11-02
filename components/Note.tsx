@@ -5,10 +5,7 @@ import { COLOR_PALETTE, NOTE_DEFAULT_FONT_SIZE, NOTE_DEFAULT_HEIGHT, NOTE_DEFAUL
 
 interface NoteProps {
   note: NoteType;
-  draggedNote: { id: string, position: Position } | null;
   onUpdatePosition: (id: string, position: Position) => void;
-  onUpdateDraggedPosition: (id: string, position: Position) => void;
-  onDragEnd: () => void;
   onUpdateContent: (id: string, content: string) => void;
   onUpdateColor: (id: string, color: string) => void;
   onDelete: (id: string) => void;
@@ -33,10 +30,7 @@ const PAN_EDGE_THRESHOLD = 60; // Pixels from the edge to trigger panning
 
 export const Note: React.FC<NoteProps> = ({
   note,
-  draggedNote,
   onUpdatePosition,
-  onUpdateDraggedPosition,
-  onDragEnd,
   onUpdateContent,
   onUpdateColor,
   onDelete,
@@ -53,6 +47,7 @@ export const Note: React.FC<NoteProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [content, setContent] = useState(note.content);
+  const [dragTransform, setDragTransform] = useState<Position | null>(null);
   const noteRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dragStartOffsetInWorld = useRef<Position>({ x: 0, y: 0 });
@@ -69,6 +64,7 @@ export const Note: React.FC<NoteProps> = ({
     if (e.button !== 0 || isEditing || (e.target as HTMLElement).closest('button')) return;
 
     setIsDragging(true);
+    setDragTransform({ x: 0, y: 0 });
     
     const { scale: currentScale } = viewStateRef.current;
     const noteRect = e.currentTarget.getBoundingClientRect();
@@ -88,7 +84,10 @@ export const Note: React.FC<NoteProps> = ({
       const targetNoteTopLeftWorldX = mouseWorldX - dragStartOffsetInWorld.current.x;
       const targetNoteTopLeftWorldY = mouseWorldY - dragStartOffsetInWorld.current.y;
 
-      onUpdateDraggedPosition(note.id, { x: targetNoteTopLeftWorldX, y: targetNoteTopLeftWorldY });
+      const transformX = targetNoteTopLeftWorldX - note.position.x;
+      const transformY = targetNoteTopLeftWorldY - note.position.y;
+
+      setDragTransform({ x: transformX, y: transformY });
 
       let panDirection: 'up' | 'down' | 'left' | 'right' | null = null;
       if (moveEvent.clientX < PAN_EDGE_THRESHOLD) panDirection = 'left';
@@ -100,18 +99,28 @@ export const Note: React.FC<NoteProps> = ({
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      onDragEnd();
       onPanCamera(null);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       
+      setDragTransform(currentTransform => {
+        if (currentTransform) {
+          const finalPosition = {
+            x: note.position.x + currentTransform.x,
+            y: note.position.y + currentTransform.y,
+          };
+          onUpdatePosition(note.id, finalPosition);
+        }
+        return null;
+      });
+
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [note.id, onUpdateDraggedPosition, onDragEnd, isEditing, onPanCamera, onBringToFront]);
+  }, [note.id, note.position, onUpdatePosition, isEditing, onPanCamera, onBringToFront]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     e.stopPropagation();
@@ -120,6 +129,7 @@ export const Note: React.FC<NoteProps> = ({
     if (isEditing || (e.target as HTMLElement).closest('button')) return;
 
     setIsDragging(true);
+    setDragTransform({ x: 0, y: 0 });
     
     const touch = e.touches[0];
     const { scale: currentScale } = viewStateRef.current;
@@ -140,8 +150,11 @@ export const Note: React.FC<NoteProps> = ({
 
       const targetNoteTopLeftWorldX = touchWorldX - dragStartOffsetInWorld.current.x;
       const targetNoteTopLeftWorldY = touchWorldY - dragStartOffsetInWorld.current.y;
+
+      const transformX = targetNoteTopLeftWorldX - note.position.x;
+      const transformY = targetNoteTopLeftWorldY - note.position.y;
       
-      onUpdateDraggedPosition(note.id, { x: targetNoteTopLeftWorldX, y: targetNoteTopLeftWorldY });
+      setDragTransform({ x: transformX, y: transformY });
 
       let panDirection: 'up' | 'down' | 'left' | 'right' | null = null;
       if (currentTouch.clientX < PAN_EDGE_THRESHOLD) panDirection = 'left';
@@ -153,8 +166,18 @@ export const Note: React.FC<NoteProps> = ({
 
     const handleTouchEnd = () => {
       setIsDragging(false);
-      onDragEnd();
       onPanCamera(null);
+
+      setDragTransform(currentTransform => {
+        if (currentTransform) {
+          const finalPosition = {
+            x: note.position.x + currentTransform.x,
+            y: note.position.y + currentTransform.y,
+          };
+          onUpdatePosition(note.id, finalPosition);
+        }
+        return null;
+      });
 
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
@@ -162,7 +185,7 @@ export const Note: React.FC<NoteProps> = ({
 
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
-}, [note.id, onUpdateDraggedPosition, onDragEnd, isEditing, onPanCamera, onBringToFront]);
+}, [note.id, note.position, onUpdatePosition, isEditing, onPanCamera, onBringToFront]);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -191,17 +214,15 @@ export const Note: React.FC<NoteProps> = ({
     setIsColorPickerOpen(false);
   }
 
-  const isNoteDragged = draggedNote?.id === note.id;
-  const currentPosition = isNoteDragged ? draggedNote.position : note.position;
-
   const noteStyle: React.CSSProperties = {
-    left: currentPosition.x,
-    top: currentPosition.y,
+    left: note.position.x,
+    top: note.position.y,
     width: note.width || NOTE_DEFAULT_WIDTH,
     height: note.height || NOTE_DEFAULT_HEIGHT,
     fontSize: `${note.fontSize || NOTE_DEFAULT_FONT_SIZE}px`,
     transitionProperty: 'width, height, font-size, background-color, border-color, box-shadow',
     zIndex: note.zIndex || 1,
+    transform: dragTransform ? `translate(${dragTransform.x}px, ${dragTransform.y}px)` : undefined,
   };
 
   return (
