@@ -4,8 +4,6 @@ A neobrutalist-styled digital corkboard designed to help individuals with ADHD v
 
 The application provides an infinite, zoomable canvas with pre-defined zones to help structure ideas from a "Brain Dump" area into actionable "Tasks", things to do "Now", and finally to "Done".
 
-![ADHD Corkboard Screenshot](https://i.imgur.com/your-screenshot.png) 
-*(Screenshot placeholder: A visual of the corkboard with several colored notes in different zones, connected by lines, showcasing the neobrutalist UI.)*
 
 ## ✨ Core Features
 
